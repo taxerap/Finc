@@ -1,0 +1,10 @@
+*.exe
+*.bat
+*.sh
+*.cmd
+*.log
+*.gch
+*.map
+
+/bin/
+/.vscode/
