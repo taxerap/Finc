@@ -30,7 +30,6 @@
 #include "pch.h"
 
 #include <dirent.h>
-#include <io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -58,6 +57,7 @@ finc_ScanAndPrint(char *extension, char *directory, FILE *output)
 {
     DIR *dir = opendir(directory);
     struct dirent *f_entry = readdir(dir);
+    struct stat f_stat;
 
     if (!dir || !f_entry)
         return;
@@ -72,7 +72,8 @@ finc_ScanAndPrint(char *extension, char *directory, FILE *output)
         if (strstr(f_entry->d_name, extension))
             fprintf(output, "    %s%c\n", path, SHELL_NL);
 
-        finc_ScanAndPrint(extension, path, output);
+        if (!stat(directory, &f_stat) && S_ISDIR(f_stat.st_mode))
+            finc_ScanAndPrint(extension, path, output);
     } while ((f_entry = readdir(dir)));
 
     closedir(dir);
