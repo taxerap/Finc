@@ -72,7 +72,7 @@ finc_ScanAndPrint(char *extension, char *directory, FILE *output)
         if (strstr(f_entry->d_name, extension))
             fprintf(output, "    %s%c\n", path, SHELL_NL);
 
-        if (!stat(directory, &f_stat) && S_ISDIR(f_stat.st_mode))
+        if (!stat(path, &f_stat) && S_ISDIR(f_stat.st_mode))
             finc_ScanAndPrint(extension, path, output);
     } while ((f_entry = readdir(dir)));
 
