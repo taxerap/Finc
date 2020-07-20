@@ -31,15 +31,14 @@
 
 #include <dirent.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
-static const size_t MAX_PATH_LEN = 256ULL;
+static const size_t FINC_MAX_PATH_LEN = 256ULL;
 
 #ifdef FINC_TARGET_WINDOWS
-    static const char SHELL_NL = '^';
+    static const char FINC_SHELL_NL = '^';
 #else
-    static const char SHELL_NL = '\\';
+    static const char FINC_SHELL_NL = '\\';
 #endif
 
 ///
@@ -53,7 +52,7 @@ static const size_t MAX_PATH_LEN = 256ULL;
 /// \param output Where to output. Feed stdout if you just want console output
 ///
 void
-finc_ScanAndPrint(char *extension, char *directory, FILE *output)
+finc_ScanAndPrint( const char *extension, const char *directory, FILE *output )
 {
     DIR *dir = opendir(directory);
     struct dirent *f_entry = readdir(dir);
@@ -67,10 +66,12 @@ finc_ScanAndPrint(char *extension, char *directory, FILE *output)
         if (!strcmp(f_entry->d_name, ".") || !strcmp(f_entry->d_name, ".."))
             continue;
 
-        char path[MAX_PATH_LEN];
-        snprintf(path, MAX_PATH_LEN - 1ULL, "%s/%s", directory, f_entry->d_name);
-        if (strstr(f_entry->d_name, extension))
-            fprintf(output, "    %s%c\n", path, SHELL_NL);
+        char path[FINC_MAX_PATH_LEN];
+        snprintf(path, FINC_MAX_PATH_LEN, "%s/%s", directory, f_entry->d_name);
+
+        char *dot_occurrence = strrchr(f_entry->d_name, '.');
+        if (dot_occurrence && !strcmp(dot_occurrence, extension))
+            fprintf(output, "%s%c\n", path, FINC_SHELL_NL);
 
         if (!stat(path, &f_stat) && S_ISDIR(f_stat.st_mode))
             finc_ScanAndPrint(extension, path, output);
@@ -84,15 +85,7 @@ main( int argc, char *argv[] )
 {
     FILE *output;
     if (argc <= 1)
-    {
-        char out[MAX_PATH_LEN];
-        printf("Please feed output target (Use \"stdout\" for console output):\n");
-        scanf("%s", out);
-        if (!strcmp(out, "stdout"))
-            output = stdout;
-        else
-            output = fopen(out, "w");
-    }
+        output = fopen("finc.txt", "w");
     else if (!strcmp(argv[1], "stdout"))
         output = stdout;
     else

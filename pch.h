@@ -39,12 +39,6 @@
     #define FINC_TARGET_POSIX
 #endif
 
-#ifdef _DEBUG
-    #define FINC_BUILD_DEBUG
-#else
-    #define FINC_BUILD_RELEASE
-#endif
-
 #include <assert.h>
 #include <complex.h>
 #include <ctype.h>
@@ -78,9 +72,5 @@
 #include <uchar.h>
 #include <wchar.h>
 #include <wctype.h>
-
-#ifdef FINC_TARGET_WINDOWS
-    #include <windows.h>
-#endif
 
 #endif // !FINC_PCH_H
