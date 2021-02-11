@@ -56,7 +56,7 @@ finc_ScanAndPrint( const char *extension, const char *directory, FILE *output )
 {
     DIR *dir = opendir(directory);
     struct dirent *f_entry = readdir(dir);
-    struct stat f_stat;
+    struct stat64 f_stat;
 
     if (!dir || !f_entry)
         return;
@@ -70,10 +70,10 @@ finc_ScanAndPrint( const char *extension, const char *directory, FILE *output )
         snprintf(path, FINC_MAX_PATH_LEN, "%s/%s", directory, f_entry->d_name);
 
         char *dot_occurrence = strrchr(f_entry->d_name, '.');
-        if (dot_occurrence && !strcmp(dot_occurrence, extension))
+        if (dot_occurrence && !strcmp(dot_occurrence, extension) && strlen(dot_occurrence) == strlen(extension))
             fprintf(output, "%s%c\n", path, FINC_SHELL_NL);
 
-        if (!stat(path, &f_stat) && S_ISDIR(f_stat.st_mode))
+        if (!stat64(path, &f_stat) && S_ISDIR(f_stat.st_mode))
             finc_ScanAndPrint(extension, path, output);
     } while ((f_entry = readdir(dir)));
 
