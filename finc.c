@@ -5,7 +5,7 @@
 **************************************************************************************************
 *                                                                                                *
 *                              A free, open-source utility program.                              *
-*                            (c) 2020 Taxerap, some rights reserved.                             *
+*                         (c) 2020 - 2021 Taxerap, some rights reserved.                         *
 *                                                                                                *
 *              Finc is a free software. You can freely do whatever you want with it              *
 *     under the JUST DON'T BOTHER ME PUBLIC LICENSE (hereinafter referred to as the license)     *
@@ -27,24 +27,36 @@
 *                                                                                                *
 **************************************************************************************************/
 
-#include "pch.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifdef _GNU_SOURCE
+    #define FINC_READDIR readdir64
+    #define FINC_DIRENT  dirent64
+    #define FINC_STAT    stat64
+#else
+    #define FINC_READDIR readdir
+    #define FINC_DIRENT  dirent
+    #define FINC_STAT    stat
+#endif
+
 static const size_t FINC_MAX_PATH_LEN = 256ULL;
 
-#ifdef FINC_TARGET_WINDOWS
-    static const char FINC_SHELL_NL = '^';
+#ifdef _WIN32
+    static const char *FINC_SHELL_NL = " ^";
 #else
-    static const char FINC_SHELL_NL = '\\';
+    static const char *FINC_SHELL_NL = " \\";
 #endif
 
 ///
 /// \brief Scan and print files with extension
 ///
-/// Scan and print all files with the given extension in the given directory into output.<BR />
+/// Scan and print all files with the given extension in the given directory into output, with the shell line break added.<BR />
 /// This function searches recursively, so all the subdirectories will be searched too.
 ///
 /// \param extension Extension to search for
@@ -55,10 +67,12 @@ void
 finc_ScanAndPrint( const char *extension, const char *directory, FILE *output )
 {
     DIR *dir = opendir(directory);
-    struct dirent *f_entry = readdir(dir);
-    struct stat64 f_stat;
+    if (!dir)
+        return;
 
-    if (!dir || !f_entry)
+    struct FINC_DIRENT *f_entry = FINC_READDIR(dir);
+    struct FINC_STAT f_stat;
+    if (!f_entry)
         return;
 
     do
@@ -71,11 +85,11 @@ finc_ScanAndPrint( const char *extension, const char *directory, FILE *output )
 
         char *dot_occurrence = strrchr(f_entry->d_name, '.');
         if (dot_occurrence && !strcmp(dot_occurrence, extension) && strlen(dot_occurrence) == strlen(extension))
-            fprintf(output, "%s%c\n", path, FINC_SHELL_NL);
+            fprintf(output, "%s%s\n", path, FINC_SHELL_NL);
 
-        if (!stat64(path, &f_stat) && S_ISDIR(f_stat.st_mode))
+        if (!FINC_STAT(path, &f_stat) && S_ISDIR(f_stat.st_mode))
             finc_ScanAndPrint(extension, path, output);
-    } while ((f_entry = readdir(dir)));
+    } while ((f_entry = FINC_READDIR(dir)));
 
     closedir(dir);
 }
